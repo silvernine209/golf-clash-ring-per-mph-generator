@@ -3,7 +3,7 @@
 //   - Navigations (HTML): network-first with cache fallback → always fresh online,
 //     but works offline. Avoids stale UI after deploys.
 //   - Static assets (clubs.js, icons, manifest): cache-first.
-const CACHE = "gc-wind-v11";
+const CACHE = "gc-wind-v12";
 const SHELL = [
   "./",
   "./index.html",

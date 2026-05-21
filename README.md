@@ -60,13 +60,17 @@ Back on the main screen, when you set up a shot in Golf Clash:
 2. **Tap the compass** in the direction the in-game wind arrow points
    - The 4 cardinal arrows (N/E/S/W) are red to find quickly
    - Center button resets direction to pure side wind
-3. **Pick your ball power** if you're using a Power 1–5 ball
-4. **Read off the row** for the club you'll hit. The numbers under MIN / MID / MAX tell you how many rings to pull the bullseye into the wind:
+3. **Pick your ball power** (0 / 2 / 4 / 6 / 8 / 10 — matches the in-game ball-power UI). Each step adds % carry: `+3% / +5% / +7% / +10% / +13%`.
+4. **Set elevation** if the pin is uphill or downhill. The slider goes ±40% in **5% steps**:
+   - Negative (e.g. `-20%`) = downhill → ball flies further → **more rings** (×1.20)
+   - Positive (e.g. `+20%`) = uphill → ball lands shorter → **fewer rings** (×0.80)
+   - Live multiplier shown above the slider (`rings × 1.20`)
+5. **Read off the row** for the club you'll hit. The numbers under MIN / MID / MAX tell you how many rings to pull the bullseye into the wind:
    - MAX = full slider (club's max distance)
    - MID = halfway through the club's usable range
    - MIN = where this club first appears (just above the shorter club's max)
 
-### 5. Use Shot distance for the exact answer
+### Use Shot distance for the exact answer
 
 If you'd rather not eyeball MIN/MID/MAX, type the in-game shot distance into the **Shot distance** input:
 
@@ -77,13 +81,26 @@ A recommendation card appears below Table 1 with:
 - which club to use,
 - the suggested slider %,
 - the exact rings to pull at *that* specific distance (not just MIN/MID/MAX),
-- and the math breakdown so you can sanity-check (`12 MPH × 0.89 × 0.60 dir = 6.4 rings`).
+- and the math breakdown so you can sanity-check (e.g. `12 MPH × 0.89 rings/mph × 1.20 elev = 12.8 rings`). The factor terms only appear when they're not `1.00`.
 
 The matching club row is also highlighted in green.
 
-### 6. Chip shots — use the slider
+### Chip shots — use the slider
 
 For Wedge / Rough Iron / Sand Wedge shots, drag the slider in **Table 2** to match the slider position you'll use in-game. The live ring count updates as you drag.
+
+### Reset between shots
+
+Tap the **↺ Reset** button in the top-right of the play screen to clear:
+
+- wind MPH → `0`
+- direction → side wind (East)
+- ball power → `0`
+- elevation → `0%` (flat)
+- chip sliders → `100%`
+- shot distance → empty
+
+Bag setup and the global Settings (asymmetric toggle) are not touched.
 
 ---
 
@@ -117,8 +134,8 @@ rings_per_mph = actual_carry ÷ ( category_max
 
 Final rings to pull = `rings_per_mph × wind_mph × direction_factor × elevation_factor`.
 
-- `direction_factor` = `1.00` by default for all directions; if you enable **Asymmetric head/tail factor** in Settings, it becomes `1.10` for headwind, `0.85` for tailwind, `1.00` for side wind, smoothly interpolated between.
-- `elevation_factor` = `1 − elev/100`. A downhill (`-20%`) shot → `1.20` (more rings). An uphill (`+20%`) shot → `0.80` (fewer rings). Adjust on the elevation slider; default `0%`.
+- `direction_factor` = `1.00` by default for all directions; if you enable **Asymmetric head/tail factor** in Settings, it becomes `1.10` for headwind, `0.85` for tailwind, `1.00` for side wind, smoothly interpolated between (`sin²·1.00 + cos²·head_or_tail`).
+- `elevation_factor` = `1 − elev/100`. A downhill (`-20%`) shot → `1.20` (more rings). An uphill (`+20%`) shot → `0.80` (fewer rings). Adjust on the elevation slider — range **±40%** in **5% steps**, default `0%`.
 
 The magnitude is the same regardless of wind direction — what changes is **which way** you pull the bullseye:
 

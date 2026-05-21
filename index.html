@@ -144,6 +144,14 @@
       width: 40px; height: 40px; border-radius: 10px; background: var(--surface);
       border: 1px solid var(--border); font-size: 18px;
     }
+    .reset-btn {
+      margin-left: auto;
+      height: 40px; padding: 0 14px; border-radius: 10px;
+      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+      font-size: 14px; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .reset-btn:active { background: var(--accent-soft); transform: scale(0.97); }
 
     /* Wind input section */
     .wind-card { display: grid; grid-template-columns: 1fr; gap: 10px; }
@@ -480,6 +488,7 @@
       <header class="bar">
         <select id="bag-selector" aria-label="Active bag"></select>
         <button class="icon-btn" id="open-bags" title="Manage bags">⚙</button>
+        <button class="reset-btn" id="reset-all" title="Reset wind / direction / ball power / elevation / chip sliders to defaults">↺ Reset</button>
       </header>
 
       <div class="play-grid">
@@ -531,7 +540,7 @@
           </div>
           <div class="elev-slider-wrap">
             <span class="elev-end" id="elev-end-left">−40</span>
-            <input type="range" id="elev-slider" min="-40" max="40" step="10" value="0" list="elev-ticks">
+            <input type="range" id="elev-slider" min="-40" max="40" step="5" value="0" list="elev-ticks">
             <datalist id="elev-ticks">
               <option value="-40"></option><option value="-30"></option>
               <option value="-20"></option><option value="-10"></option>
@@ -1366,6 +1375,25 @@
       updateChipLiveValues();
     }
 
+    // Restore every shot-level input to its default and reset the active
+    // bag's ball power. Bag clubs / overrides are untouched.
+    function resetAll() {
+      state.inputs = {
+        mph: "0",
+        dir: 90,          // East = pure side wind
+        pinYd: "",
+        elev: 0,
+        sliders: { Wedges: 100, RoughIrons: 100, SandWedges: 100 },
+      };
+      saveInputs();
+      const bag = activeBag();
+      if (bag) {
+        bag.ballPower = 0;
+        saveBags(state.bags);
+      }
+      renderPlay();
+    }
+
     // Update direction-derived UI: pull-direction guidance in the wind
     // card (#dir-name) and the compass-dir name + category below the
     // dial. Magnitude is direction-independent because rings are a
@@ -1432,6 +1460,8 @@
       });
       // Settings → bags
       $("#open-bags").addEventListener("click", () => location.hash = "#bags");
+      // Reset all shot inputs + active bag's ball power to defaults
+      $("#reset-all").addEventListener("click", resetAll);
       // Back buttons
       $("#back-from-bags").addEventListener("click", () => location.hash = "#play");
       $("#back-from-edit").addEventListener("click", () => location.hash = "#bags");
