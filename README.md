@@ -115,7 +115,12 @@ rings_per_mph = actual_carry ÷ ( category_max
 | `rule_based_correction` | 0.9 for B52 / Grizzly at level ≥ 5, else 1.0 |
 | ball power coefficient | 1.00 / 1.03 / 1.05 / 1.07 / 1.10 / 1.13 — multiplies `actual_carry` |
 
-Final rings to pull = `rings_per_mph × wind_mph`. The magnitude is the same regardless of wind direction — what changes is **which way** you pull the bullseye:
+Final rings to pull = `rings_per_mph × wind_mph × direction_factor × elevation_factor`.
+
+- `direction_factor` = `1.00` by default for all directions; if you enable **Asymmetric head/tail factor** in Settings, it becomes `1.10` for headwind, `0.85` for tailwind, `1.00` for side wind, smoothly interpolated between.
+- `elevation_factor` = `1 − elev/100`. A downhill (`-20%`) shot → `1.20` (more rings). An uphill (`+20%`) shot → `0.80` (fewer rings). Adjust on the elevation slider; default `0%`.
+
+The magnitude is the same regardless of wind direction — what changes is **which way** you pull the bullseye:
 
 - **Side wind** → pull rings sideways (into the wind)
 - **Headwind** → pull rings *forward* (ball flies short, aim past the target)

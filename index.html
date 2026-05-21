@@ -76,11 +76,10 @@
 
     /* >= 600px: single unified layout — wind card sized to its content
        (≈320px) on the left, compass + narrow vertical ball power filling
-       the rest of the top row, tables full width below. play-input-col
-       and play-tables-col go invisible via display:contents so the
-       inner cards become direct grid items; cb-pair is the flex-row
-       that holds compass + bp side-by-side. align-items: start keeps
-       the wind card from stretching to match a taller compass column. */
+       the rest of the top row, elevation full-width below them, tables
+       full width below. play-input-col / play-tables-col go invisible
+       via display:contents so the inner cards become direct grid items;
+       cb-pair is the flex-row that holds compass + bp side-by-side. */
     @media (min-width: 600px) {
       main { padding: 12px 16px 32px; }
       .play-grid {
@@ -88,6 +87,7 @@
         grid-template-columns: 320px 1fr;
         grid-template-areas:
           "wind cb"
+          "elev elev"
           "t1   t1"
           "t2   t2";
         gap: 12px;
@@ -108,6 +108,7 @@
       .cb-pair .ball-power .chip .num { font-size: 13px; }
       .cb-pair .ball-power .chip .sub { font-size: 9px; }
       .card[data-area="wind"] { grid-area: wind; }
+      .card[data-area="elev"] { grid-area: elev; }
       .card[data-area="t1"]   { grid-area: t1; }
       .card[data-area="t2"]   { grid-area: t2; }
     }
@@ -304,6 +305,43 @@
       }
     }
 
+    /* Elevation slider — horizontal, -40..+40 in 10% steps. Negative = downhill
+       (ball flies further, more rings); positive = uphill (less rings). */
+    .elevation-card { padding: 10px 12px; }
+    .elev-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+    .elev-row h3 { margin: 0; }
+    .elev-value { font-weight: 700; font-size: 16px; color: var(--accent); min-width: 44px; }
+    .elev-label { font-size: 12px; }
+    .elev-mult { margin-left: auto; }
+    .elev-slider-wrap { display: flex; align-items: center; gap: 10px; }
+    .elev-end { font-size: 11px; color: var(--text-dim); min-width: 24px; text-align: center; }
+    .elev-slider-wrap input[type=range] {
+      flex: 1; height: 36px; -webkit-appearance: none; appearance: none;
+      background: transparent; touch-action: pan-y;
+    }
+    .elev-slider-wrap input[type=range]::-webkit-slider-runnable-track {
+      height: 8px; background: var(--surface-2); border-radius: 4px;
+      background-image: linear-gradient(to right,
+        var(--surface-2) 0%, var(--surface-2) 49%,
+        var(--border) 49%, var(--border) 51%,
+        var(--surface-2) 51%, var(--surface-2) 100%);
+    }
+    .elev-slider-wrap input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--accent); margin-top: -10px; border: 2px solid white;
+      box-shadow: 0 2px 5px rgba(0,0,0,.25);
+    }
+    .elev-slider-wrap input[type=range]::-moz-range-track {
+      height: 8px; background: var(--surface-2); border-radius: 4px;
+    }
+    .elev-slider-wrap input[type=range]::-moz-range-thumb {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--accent); border: 2px solid white;
+      box-shadow: 0 2px 5px rgba(0,0,0,.25);
+    }
+    .elev-legend { display: flex; justify-content: space-between; gap: 12px; margin-top: 4px; flex-wrap: wrap; }
+
     /* Recommendation card under Table 1 */
     #pin-hint { margin-top: 8px; }
     .rec-line {
@@ -484,6 +522,31 @@
           </div>
         </div>
 
+        <div class="card elevation-card" data-area="elev">
+          <div class="elev-row">
+            <h3>Elevation</h3>
+            <span class="elev-value mono" id="elev-value">0%</span>
+            <span class="elev-label dim" id="elev-label">flat</span>
+            <span class="tiny dim elev-mult">rings × <span id="elev-mult" class="mono">1.00</span></span>
+          </div>
+          <div class="elev-slider-wrap">
+            <span class="elev-end" id="elev-end-left">−40</span>
+            <input type="range" id="elev-slider" min="-40" max="40" step="10" value="0" list="elev-ticks">
+            <datalist id="elev-ticks">
+              <option value="-40"></option><option value="-30"></option>
+              <option value="-20"></option><option value="-10"></option>
+              <option value="0"></option>
+              <option value="10"></option><option value="20"></option>
+              <option value="30"></option><option value="40"></option>
+            </datalist>
+            <span class="elev-end" id="elev-end-right">+40</span>
+          </div>
+          <div class="elev-legend tiny dim">
+            <span>↘ downhill — ball travels further, more rings</span>
+            <span>↗ uphill — ball travels less, fewer rings</span>
+          </div>
+        </div>
+
         <div class="play-tables-col">
           <div class="card" data-area="t1">
           <div class="t1-head">
@@ -645,10 +708,14 @@
     function activeBag() { return state.bags.find(b => b.id === state.activeId) || state.bags[0]; }
 
     function loadInputs() {
-      return LS.get("gc.lastInputs", {
-        mph: "0", dir: 90, pinYd: "",
-        sliders: { Wedges:100, RoughIrons:100, SandWedges:100 }
-      });
+      const stored = LS.get("gc.lastInputs", null) || {};
+      return {
+        mph: stored.mph ?? "0",
+        dir: stored.dir ?? 90,
+        pinYd: stored.pinYd ?? "",
+        elev: stored.elev ?? 0,
+        sliders: stored.sliders ?? { Wedges:100, RoughIrons:100, SandWedges:100 },
+      };
     }
     function saveInputs() { LS.set("gc.lastInputs", state.inputs); }
 
@@ -686,6 +753,17 @@
     //     pure head   -> 1.10
     //     45° tail-side -> ~0.93
     //     45° head-side -> ~1.05
+    // Elevation factor. elev is a percent in [-40, +40] in steps of 10.
+    //   -20% (downhill 20%): ball travels further → more rings → factor 1.20
+    //   +20% (uphill 20%):  ball travels less    → fewer rings → factor 0.80
+    // Linear: factor = 1 - elev/100. Verified against the community rule
+    // of thumb (≈10% adjustment per 10% elevation, from Golf Clash Tommy
+    // and Jones Beach mini-golf guides).
+    function elevationFactor() {
+      const e = parseNum(state.inputs.elev);
+      return 1 - e / 100;
+    }
+
     function directionFactor(deg) {
       if (!getSetting('asymmetric')) return 1;
       const rad = deg * Math.PI / 180;
@@ -787,6 +865,10 @@
       $("#mph-value").textContent = state.inputs.mph || "0";
       refreshDirReadouts();
       $("#pin-yd").value = state.inputs.pinYd || "";
+      // elevation display
+      const elevSlider = $("#elev-slider");
+      if (elevSlider) elevSlider.value = state.inputs.elev ?? 0;
+      refreshElevReadouts();
 
       renderCompass();
       renderTable1();
@@ -845,8 +927,10 @@
       if (!pin) return { html: "", matchedCat: null, exactRings: null };
       const mph = parseNum(state.inputs.mph);
       const dirF = directionFactor(state.inputs.dir);
-      // Only show the direction factor in the breakdown when it isn't 1.
+      const elevF = elevationFactor();
+      // Only show factors in the breakdown when they aren't 1.
       const dirBreakdown = Math.abs(dirF - 1) > 0.001 ? ` × ${dirF.toFixed(2)} dir` : "";
+      const elevBreakdown = Math.abs(elevF - 1) > 0.001 ? ` × ${elevF.toFixed(2)} elev` : "";
 
       // Normal clubs: iterate shortest-first, so an exact boundary distance
       // (e.g. 166yd = Wood max) picks the SHORTER club (Wood at 100% slider)
@@ -863,13 +947,13 @@
         if (lowerOk && pin <= maxC) {
           const sliderPct = (pin / maxC) * 100;
           const rPerMph = ringsPerMph(cat, s.power, s.accuracy, pin, s.name, s.level, bag.ballPower);
-          const rings = rPerMph * mph * dirF;
+          const rings = rPerMph * mph * dirF * elevF;
           const html = `
             <div class="rec-line">
               <span class="rec-arrow">→</span>
               <div class="rec-body">
                 <div class="rec-club"><strong>${DISPLAY[cat]} — ${escapeHtml(s.name)} ${s.level}</strong> · ${sliderPct.toFixed(0)}% slider</div>
-                <div class="rec-rings"><span class="rec-num mono">${fmt(rings)}</span> <span class="rec-unit">rings to pull</span> <span class="tiny dim">(${mph || 0} MPH × ${rPerMph.toFixed(2)} rings/mph${dirBreakdown})</span></div>
+                <div class="rec-rings"><span class="rec-num mono">${fmt(rings)}</span> <span class="rec-unit">rings to pull</span> <span class="tiny dim">(${mph || 0} MPH × ${rPerMph.toFixed(2)} rings/mph${dirBreakdown}${elevBreakdown})</span></div>
               </div>
             </div>`;
           return { html, matchedCat: cat, exactRings: rings };
@@ -881,7 +965,7 @@
         const s = bag.slots.Wedges;
         const sliderPct = (pin / wedgePower) * 100;
         const rPerMph = ringsPerMph('Wedges', s.power, s.accuracy, pin, s.name, s.level, bag.ballPower);
-        const rings = rPerMph * mph * dirF;
+        const rings = rPerMph * mph * dirF * elevF;
         const html = `
           <div class="rec-line">
             <span class="rec-arrow">→</span>
@@ -902,6 +986,7 @@
       const bag = activeBag();
       const mph = parseNum(state.inputs.mph);
       const dirF = directionFactor(state.inputs.dir);
+      const elevF = elevationFactor();
       const pin = parseNum(state.inputs.pinYd);
       const rec = pinRecommendation(pin, bag);
       const tbody = $("#t1-body");
@@ -911,9 +996,9 @@
         const sh = bag.slots[SHORTER[cat]];
         const minC = sh.power, maxC = s.power, midC = (minC + maxC) / 2;
         const args = (carry) => [cat, s.power, s.accuracy, carry, s.name, s.level, bag.ballPower];
-        const rMin = ringsPerMph(...args(minC)) * mph * dirF;
-        const rMid = ringsPerMph(...args(midC)) * mph * dirF;
-        const rMax = ringsPerMph(...args(maxC)) * mph * dirF;
+        const rMin = ringsPerMph(...args(minC)) * mph * dirF * elevF;
+        const rMid = ringsPerMph(...args(midC)) * mph * dirF * elevF;
+        const rMax = ringsPerMph(...args(maxC)) * mph * dirF * elevF;
         const inRange = rec.matchedCat === cat;
         rows += `
           <tr class="${inRange ? "in-range" : ""}">
@@ -965,6 +1050,7 @@
       const bag = activeBag();
       const mph = parseNum(state.inputs.mph);
       const dirF = directionFactor(state.inputs.dir);
+      const elevF = elevationFactor();
       for (const cat of SLIDER) {
         const row = document.querySelector(`#chip-rows .chip-row[data-cat="${cat}"]`);
         if (!row) continue;
@@ -972,7 +1058,7 @@
         const sliderPct = state.inputs.sliders[cat] ?? 100;
         const carry = s.power * sliderPct / 100;
         const rPerMph = ringsPerMph(cat, s.power, s.accuracy, carry, s.name, s.level, bag.ballPower);
-        const live = rPerMph * mph * dirF;
+        const live = rPerMph * mph * dirF * elevF;
         row.querySelector('.pct').textContent = sliderPct.toFixed(0) + '%';
         row.querySelector('.live').textContent = fmt(live);
       }
@@ -1255,6 +1341,31 @@
       updateChipLiveValues();
     }
 
+    // Update elevation readouts (value, label, multiplier) — independent
+    // of any specific event, called whenever elev state may have changed.
+    function refreshElevReadouts() {
+      const elev = parseNum(state.inputs.elev);
+      const factor = elevationFactor();
+      const valEl = $("#elev-value");
+      const labelEl = $("#elev-label");
+      const multEl = $("#elev-mult");
+      if (!valEl) return; // play view not rendered yet
+      valEl.textContent = (elev > 0 ? "+" : "") + elev.toFixed(0) + "%";
+      let label = "flat";
+      if (elev < 0) label = "downhill — more rings";
+      else if (elev > 0) label = "uphill — fewer rings";
+      labelEl.textContent = label;
+      multEl.textContent = factor.toFixed(2);
+    }
+
+    function onElevation(v) {
+      state.inputs.elev = Math.max(-40, Math.min(40, +v || 0));
+      saveInputs();
+      refreshElevReadouts();
+      renderTable1();
+      updateChipLiveValues();
+    }
+
     // Update direction-derived UI: pull-direction guidance in the wind
     // card (#dir-name) and the compass-dir name + category below the
     // dial. Magnitude is direction-independent because rings are a
@@ -1312,6 +1423,8 @@
       });
       // Pin distance
       $("#pin-yd").addEventListener("input", (e) => onPinYd(e.target.value));
+      // Elevation slider
+      $("#elev-slider").addEventListener("input", (e) => onElevation(e.target.value));
       // Bag selector
       $("#bag-selector").addEventListener("change", (e) => {
         setActiveId(e.target.value);

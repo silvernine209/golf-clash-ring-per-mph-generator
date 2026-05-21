@@ -96,19 +96,18 @@ def main():
         page = new_page(p, 1180, 720)
         seed_and_open(
             page, [SEED_BAG],
-            {"mph": "8", "dir": 90, "pinYd": "", "sliders": {"Wedges": 60, "RoughIrons": 100, "SandWedges": 100}},
+            {"mph": "8", "dir": 90, "pinYd": "", "elev": 0, "sliders": {"Wedges": 60, "RoughIrons": 100, "SandWedges": 100}},
         )
         shoot(page, "01-play-wide")
         page.close()
 
-        # 2. Play view with a Shot distance entered — shows the
-        # recommendation card and the highlighted club row. Uses side
-        # wind (deg=90, E) so the recommendation card has non-zero
-        # rings to demonstrate the feature.
-        page = new_page(p, 1180, 760)
+        # 2. Play view with a Shot distance entered AND a -20% elevation
+        # to demonstrate the recommendation card's elev factor in the
+        # math breakdown plus the new elevation slider.
+        page = new_page(p, 1180, 820)
         seed_and_open(
             page, [SEED_BAG],
-            {"mph": "12", "dir": 90, "pinYd": "160", "sliders": {"Wedges": 60, "RoughIrons": 100, "SandWedges": 100}},
+            {"mph": "12", "dir": 90, "pinYd": "160", "elev": -20, "sliders": {"Wedges": 60, "RoughIrons": 100, "SandWedges": 100}},
         )
         shoot(page, "02-play-with-pin")
         page.close()
@@ -118,7 +117,7 @@ def main():
         page = new_page(p, 390, 844)
         seed_and_open(
             page, [SEED_BAG],
-            {"mph": "8", "dir": 90, "pinYd": "", "sliders": {"Wedges": 60, "RoughIrons": 100, "SandWedges": 100}},
+            {"mph": "8", "dir": 90, "pinYd": "", "elev": 0, "sliders": {"Wedges": 60, "RoughIrons": 100, "SandWedges": 100}},
         )
         shoot(page, "03-play-mobile", full_page=True)
         page.close()
