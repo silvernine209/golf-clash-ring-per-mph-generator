@@ -1,6 +1,6 @@
 # Golf Clash Wind — rings per MPH
 
-A mobile-first wind calculator for Golf Clash. Tap the wind speed and direction → see exactly how many rings to pull the bullseye, per club, in real time. Works offline once installed.
+A mobile-first wind calculator for Golf Clash. Tap the wind speed → see exactly how many rings to pull the bullseye, per club, in real time. Works offline once installed.
 
 **Open the app:** <https://silvernine209.github.io/golf-clash-wind/>
 
@@ -10,10 +10,11 @@ A mobile-first wind calculator for Golf Clash. Tap the wind speed and direction 
 
 ## What it does
 
-- Tap a number on the wind speed pad
-- Tap the in-game wind arrow direction on the compass
-- Pick your ball power (0–5)
-- The table on the right shows **rings to pull** for every club in your bag — live, no math required
+- Tap your wind speed on the big number pad
+- Pick your ball power (0 / 2 / 4 / 6 / 8 / 10)
+- Set the vertical elevation slider if the pin is uphill or downhill
+- The table shows **rings to pull** for every club in your bag — live, no math required
+- Pull the bullseye that many rings **opposite the in-game wind arrow** — the ring count is the same in every direction, only the way you pull changes
 - Wedge / Rough / Sand sliders let you read the chip ring count for any distance ≤ club power
 
 The formula is the verified one from Golf Clash Notebook's open-source [wind.scala](https://github.com/golf-clash-notebook/golf-clash-notebook.github.io/blob/dev/modules/site/src/main/scala/golfclash/notebook/wind.scala), including the 1.45× Rough Iron and 1.15× Sand Wedge category multipliers and the 0.9× correction for B52/Grizzly at level ≥ 5. The Python CLI in this repo and the web app both use the same formula.
@@ -56,19 +57,17 @@ The seven slots are: Driver, Wood, Long Iron, Short Iron, Wedge, Rough Iron, San
 
 Back on the main screen, when you set up a shot in Golf Clash:
 
-1. **Tap the wind speed** on the numpad — e.g. 12 MPH
-2. **Tap the compass** in the direction the in-game wind arrow points
-   - The 4 cardinal arrows (N/E/S/W) are red to find quickly
-   - Center button resets direction to pure side wind
-3. **Pick your ball power** (0 / 2 / 4 / 6 / 8 / 10 — matches the in-game ball-power UI). Each step adds % carry: `+3% / +5% / +7% / +10% / +13%`.
-4. **Set elevation** if the pin is uphill or downhill. The slider goes ±40% in **5% steps**:
-   - Negative (e.g. `-20%`) = downhill → ball flies further → **more rings** (×1.20)
-   - Positive (e.g. `+20%`) = uphill → ball lands shorter → **fewer rings** (×0.80)
-   - Live multiplier shown above the slider (`rings × 1.20`)
-5. **Read off the row** for the club you'll hit. The numbers under MIN / MID / MAX tell you how many rings to pull the bullseye into the wind:
+1. **Tap the wind speed** on the big number pad — e.g. 12 MPH
+2. **Pick your ball power** (0 / 2 / 4 / 6 / 8 / 10 — matches the in-game ball-power UI). Each step adds % carry: `+3% / +5% / +7% / +10% / +13%`.
+3. **Set elevation** on the vertical slider beside ball power, if the pin is uphill or downhill. It goes ±40% in **5% steps**:
+   - Up = uphill → ball lands shorter → **fewer rings** (×0.80 at +20%)
+   - Down = downhill → ball flies further → **more rings** (×1.20 at −20%)
+   - The effect shows live in the table's ring numbers (and in the Shot-distance breakdown, e.g. `× 1.20 elev`)
+4. **Read off the row** for the club you'll hit. The numbers under MIN / MID / MAX tell you how many rings to pull the bullseye:
    - MAX = full slider (club's max distance)
    - MID = halfway through the club's usable range
    - MIN = where this club first appears (just above the shorter club's max)
+5. **Pull the bullseye that many rings — opposite the in-game wind arrow.** The ring count is the same whichever way the wind blows; only the direction you pull changes (sideways for a crosswind, back for a tailwind, forward for a headwind).
 
 ### Use Shot distance for the exact answer
 
@@ -94,13 +93,12 @@ For Wedge / Rough Iron / Sand Wedge shots, drag the slider in **Table 2** to mat
 Tap the **↺ Reset** button in the top-right of the play screen to clear:
 
 - wind MPH → `0`
-- direction → side wind (East)
 - ball power → `0`
 - elevation → `0%` (flat)
 - chip sliders → `100%`
 - shot distance → empty
 
-Bag setup and the global Settings (asymmetric toggle) are not touched.
+Your bag setup is not touched.
 
 ---
 
@@ -127,24 +125,22 @@ rings_per_mph = actual_carry ÷ ( category_max
 |---|---|
 | `actual_carry` | yards the ball needs to travel (= power × slider%) |
 | `category_max` | Driver 240, Wood 180, Long Iron 135, Short Iron 90, Wedge 45, Rough Iron 135, Sand Wedge 120 |
-| `(3 − accuracy/50)` | base MPH-per-ring at full power and side wind (e.g., 100-acc = 1.0; 60-acc = 1.8) |
+| `(3 − accuracy/50)` | base MPH-per-ring at full power (e.g., 100-acc = 1.0; 60-acc = 1.8) |
 | `category_mult` | 1.45 for Rough Iron, 1.15 for Sand Wedge, else 1.0 |
 | `rule_based_correction` | 0.9 for B52 / Grizzly at level ≥ 5, else 1.0 |
 | ball power coefficient | 1.00 / 1.03 / 1.05 / 1.07 / 1.10 / 1.13 — multiplies `actual_carry` |
 
-Final rings to pull = `rings_per_mph × wind_mph × direction_factor × elevation_factor`.
+Final rings to pull = `rings_per_mph × wind_mph × elevation_factor`.
 
-- `direction_factor` = `1.00` by default for all directions; if you enable **Asymmetric head/tail factor** in Settings, it becomes `1.10` for headwind, `0.85` for tailwind, `1.00` for side wind, smoothly interpolated between (`sin²·1.00 + cos²·head_or_tail`).
-- `elevation_factor` = `1 − elev/100`. A downhill (`-20%`) shot → `1.20` (more rings). An uphill (`+20%`) shot → `0.80` (fewer rings). Adjust on the elevation slider — range **±40%** in **5% steps**, default `0%`.
+- The magnitude is **direction-independent** — a given wind is the same ring count whether it's a head, tail, or cross wind. Only *which way you pull* changes, and you read that from the in-game wind arrow. This matches the canonical formula (which has no directional term) and every mainstream tool (GCN, AllClash, Golf Clash Tommy).
+- `elevation_factor` = `1 − elev/100`. A downhill (`-20%`) shot → `1.20` (more rings). An uphill (`+20%`) shot → `0.80` (fewer rings). Adjust on the vertical elevation slider — range **±40%** in **5% steps**, default `0%`.
 
-The magnitude is the same regardless of wind direction — what changes is **which way** you pull the bullseye:
+The magnitude is the same regardless of wind direction — what changes is **which way** you pull the bullseye. Read the direction off the in-game wind arrow and pull the opposite way:
 
 - **Side wind** → pull rings sideways (into the wind)
 - **Headwind** → pull rings *forward* (ball flies short, aim past the target)
 - **Tailwind** → pull rings *backward* (ball flies long, aim short of the target)
 - **Diagonal** → pull at the corresponding angle
-
-The compass shows the wind direction; the hint below it tells you which way to pull for the current angle.
 
 **Sources:**
 - [wind.scala (canonical formula)](https://github.com/golf-clash-notebook/golf-clash-notebook.github.io/blob/dev/modules/site/src/main/scala/golfclash/notebook/wind.scala)
@@ -211,7 +207,7 @@ Same formula as the web app. Useful for keeping a long-term-versioned record of 
 ## Caveats
 
 - **2018-era club data.** GCN's catalog hasn't been updated since 2018. New clubs released after that aren't in the list — use the "Custom / not in list…" option. Stats for older clubs that have been balance-patched may also have drifted; the per-slot **power / accuracy override** fields handle that.
-- **Head/tail wind reduction.** Real Golf Clash reduces head/tail wind's ring effect to ~60% of pure crosswind. The app interpolates: 1.0 at pure side, 0.6 at pure head/tail.
+- **Elevation is your estimate.** Golf Clash never shows a numeric elevation, so the `±40%` you dial in is a judgment call (the game's true value is hidden in the developer's code). The *direction* is rock-solid — downhill = more rings, uphill = fewer — but the exact percentage is trial-and-error, same as every community tool.
 - **Wedge / Rough / Sand are situational.** The Shot-distance recommendation defaults to Wedge for chip-range distances. If you're in rough or sand, adjust the slider on the matching row of Table 2 — same slider % carries over.
 
 ---

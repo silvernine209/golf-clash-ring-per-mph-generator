@@ -67,48 +67,47 @@
     }
     main { max-width: 1100px; margin: 0 auto; padding: 12px 12px 32px; }
 
-    /* Narrow (< 600): everything stacks. play-input-col, play-tables-col
-       and cb-pair are flex columns that hold their children inline. */
+    /* Narrow (< 600): everything stacks. play-input-col / play-tables-col
+       are flex columns; be-pair is a flex ROW holding ball power + the
+       vertical elevation slider side by side to save vertical space. */
     .play-grid { display: flex; flex-direction: column; gap: 10px; }
-    .play-input-col, .play-tables-col, .cb-pair {
+    .play-input-col, .play-tables-col {
       display: flex; flex-direction: column; gap: 10px; min-width: 0;
     }
+    .be-pair { display: flex; flex-direction: row; gap: 10px; align-items: stretch; min-width: 0; }
+    .be-pair .bp-card { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .be-pair .ball-power { flex: 1; flex-direction: column; gap: 5px; align-items: stretch; }
+    .be-pair .bp-header { flex-direction: column; align-items: flex-start; gap: 0; margin-bottom: 4px; }
+    .be-pair .bp-header .caption { display: none; }
+    .be-pair .ball-power .chip {
+      width: 100%; min-width: 0; flex: 1; flex-direction: row;
+      justify-content: space-between; align-items: center; padding: 8px 10px; gap: 8px;
+    }
+    .be-pair .ball-power .chip .num { font-size: 15px; }
+    .be-pair .ball-power .chip .sub { font-size: 11px; }
+    .be-pair .elevation-card { flex: 0 0 90px; }
 
     /* >= 600px: single unified layout — wind card sized to its content
-       (≈320px) on the left, compass + narrow vertical ball power filling
-       the rest of the top row, elevation full-width below them, tables
-       full width below. play-input-col / play-tables-col go invisible
-       via display:contents so the inner cards become direct grid items;
-       cb-pair is the flex-row that holds compass + bp side-by-side. */
+       (≈320px) on the left, the be-pair (ball power + vertical elevation)
+       filling the rest of the top row, tables full width below.
+       play-input-col / play-tables-col go invisible via display:contents
+       so the inner cards become direct grid items; be-pair is the flex-row
+       that holds ball power + the vertical elevation slider side-by-side. */
     @media (min-width: 600px) {
       main { padding: 12px 16px 32px; }
       .play-grid {
         display: grid;
-        grid-template-columns: 320px 1fr;
+        grid-template-columns: minmax(300px, 1fr) 215px;
         grid-template-areas:
-          "wind cb"
-          "elev elev"
+          "wind be"
           "t1   t1"
           "t2   t2";
         gap: 12px;
-        align-items: start;
+        align-items: stretch;
       }
       .play-input-col, .play-tables-col { display: contents; }
-      .cb-pair {
-        display: flex; flex-direction: row; gap: 10px;
-        grid-area: cb; align-items: stretch;
-      }
-      .cb-pair > .compass-wrap { flex: 1; min-width: 0; }
-      .cb-pair > .bp-card { width: 76px; flex: 0 0 76px; padding: 8px 6px; }
-      .cb-pair .ball-power { flex-direction: column; gap: 4px; align-items: stretch; }
-      .cb-pair .bp-header { flex-direction: column; align-items: flex-start;
-        gap: 0; margin-bottom: 4px; }
-      .cb-pair .bp-header .caption { display: none; }
-      .cb-pair .ball-power .chip { width: 100%; padding: 3px 4px; min-width: 0; }
-      .cb-pair .ball-power .chip .num { font-size: 13px; }
-      .cb-pair .ball-power .chip .sub { font-size: 9px; }
+      .be-pair { grid-area: be; }
       .card[data-area="wind"] { grid-area: wind; }
-      .card[data-area="elev"] { grid-area: elev; }
       .card[data-area="t1"]   { grid-area: t1; }
       .card[data-area="t2"]   { grid-area: t2; }
     }
@@ -177,44 +176,15 @@
       margin-left: 6px; flex: 0 0 auto;
     }
     .clear-btn:active { background: var(--accent-soft); transform: scale(0.94); }
-    .dir-mult { font-size: 12px; color: var(--text-dim); text-align: center; }
-
-    .numpad { display: grid; grid-template-columns: repeat(3, minmax(0, 84px));
-      gap: 6px; justify-content: center; }
+    .numpad { display: grid; grid-template-columns: repeat(3, minmax(0, 150px));
+      gap: 8px; justify-content: center; }
     .numpad button {
-      background: var(--surface-2); border-radius: 10px;
-      height: 44px; font-size: 19px; font-weight: 600;
+      background: var(--surface-2); border-radius: 12px;
+      height: 64px; font-size: 27px; font-weight: 600;
       transition: transform 80ms ease, background 120ms ease;
     }
     .numpad button:active { transform: scale(0.95); background: var(--accent-soft); }
-    .numpad .clr { color: var(--warn); font-size: 15px; }
-
-    /* Compass — fill the card. Uses % width + aspect-ratio so the dial
-       scales with whatever the card column gives it. Higher max so the
-       dial is easier to tap with 24 directions. */
-    .compass-wrap { display: flex; flex-direction: column; align-items: center;
-      justify-content: center; gap: 2px; padding: 2px 4px 4px; }
-    .compass {
-      width: 100%;
-      max-width: 420px;
-      aspect-ratio: 1 / 1;
-      height: auto;
-      display: block;
-    }
-    .compass-hint { font-size: 10px; color: var(--text-dim); text-align: center;
-      line-height: 1.25; margin-top: 2px; }
-    .compass-dir { font-weight: 600; font-size: 13px; margin-top: 2px; }
-    .arrow-btn { fill: var(--text-dim); cursor: pointer; transition: fill 100ms; }
-    .arrow-btn:hover { fill: var(--text); }
-    /* Cardinal arrows (N/E/S/W) are red for quick visual anchoring */
-    .arrow-btn.cardinal { fill: var(--hit); }
-    .arrow-btn.cardinal:hover { fill: var(--hit); filter: brightness(1.15); }
-    /* Selected wins regardless — declared last so its specificity ties resolve to accent */
-    .arrow-btn.on, .arrow-btn.cardinal.on { fill: var(--accent); }
-    .compass .face { fill: var(--surface-2); stroke: var(--border); stroke-width: 1; }
-    .compass .center-btn { fill: var(--surface); stroke: var(--border); stroke-width: 1; cursor: pointer; }
-    .compass .center-label { fill: var(--text-dim); font-size: 10px; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
-    .compass .cardinal-label { fill: var(--hit); font-size: 11px; font-weight: 700; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+    .numpad .clr { color: var(--warn); font-size: 19px; }
 
     /* Ball power chips — compact, caption shares the header row */
     .bp-header { display: flex; align-items: baseline; gap: 8px;
@@ -313,42 +283,38 @@
       }
     }
 
-    /* Elevation slider — horizontal, -40..+40 in 10% steps. Negative = downhill
-       (ball flies further, more rings); positive = uphill (less rings). */
-    .elevation-card { padding: 10px 12px; }
-    .elev-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
-    .elev-row h3 { margin: 0; }
-    .elev-value { font-weight: 700; font-size: 16px; color: var(--accent); min-width: 44px; }
-    .elev-label { font-size: 12px; }
-    .elev-mult { margin-left: auto; }
-    .elev-slider-wrap { display: flex; align-items: center; gap: 10px; }
-    .elev-end { font-size: 11px; color: var(--text-dim); min-width: 24px; text-align: center; }
-    .elev-slider-wrap input[type=range] {
-      flex: 1; height: 36px; -webkit-appearance: none; appearance: none;
-      background: transparent; touch-action: pan-y;
+    /* Elevation — VERTICAL slider, sits beside the ball-power column.
+       -40..+40 in 5% steps. Top = +40 uphill (fewer rings); bottom = -40
+       downhill (more rings). No live readout text → zero layout shift. */
+    .elevation-card { padding: 10px 8px; display: flex; flex-direction: column; }
+    .elevation-card h3 { margin: 0 0 8px; }
+    .elev-vert { flex: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 6px; min-height: 180px; }
+    .elev-end { text-align: center; line-height: 1.15; }
+    .elev-vertical {
+      writing-mode: vertical-lr; direction: rtl;     /* +40 (uphill) at top */
+      width: 36px; flex: 1; min-height: 140px;
+      -webkit-appearance: none; appearance: none;
+      background: transparent; touch-action: none;
     }
-    .elev-slider-wrap input[type=range]::-webkit-slider-runnable-track {
-      height: 8px; background: var(--surface-2); border-radius: 4px;
-      background-image: linear-gradient(to right,
-        var(--surface-2) 0%, var(--surface-2) 49%,
-        var(--border) 49%, var(--border) 51%,
-        var(--surface-2) 51%, var(--surface-2) 100%);
+    .elev-vertical::-webkit-slider-runnable-track {
+      width: 8px; height: 100%; background: var(--surface-2); border-radius: 4px;
     }
-    .elev-slider-wrap input[type=range]::-webkit-slider-thumb {
+    .elev-vertical::-webkit-slider-thumb {
       -webkit-appearance: none; appearance: none;
       width: 28px; height: 28px; border-radius: 50%;
-      background: var(--accent); margin-top: -10px; border: 2px solid white;
-      box-shadow: 0 2px 5px rgba(0,0,0,.25);
+      background: var(--accent); border: 2px solid white;
+      box-shadow: 0 2px 5px rgba(0,0,0,.25); margin-left: -10px;
     }
-    .elev-slider-wrap input[type=range]::-moz-range-track {
-      height: 8px; background: var(--surface-2); border-radius: 4px;
+    .elev-vertical::-moz-range-track {
+      width: 8px; background: var(--surface-2); border-radius: 4px;
     }
-    .elev-slider-wrap input[type=range]::-moz-range-thumb {
+    .elev-vertical::-moz-range-thumb {
       width: 28px; height: 28px; border-radius: 50%;
       background: var(--accent); border: 2px solid white;
       box-shadow: 0 2px 5px rgba(0,0,0,.25);
     }
-    .elev-legend { display: flex; justify-content: space-between; gap: 12px; margin-top: 4px; flex-wrap: wrap; }
+    .elev-vertical:focus { outline: none; }
 
     /* Recommendation card under Table 1 */
     #pin-hint { margin-top: 8px; }
@@ -367,12 +333,6 @@
 
     /* Bags page */
     .bag-list { display: flex; flex-direction: column; gap: 10px; }
-    .settings-card { margin-bottom: 10px; }
-    .setting-row { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
-    .setting-row input[type=checkbox] { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--accent); flex: 0 0 auto; }
-    .setting-meta { flex: 1; min-width: 0; }
-    .setting-name { font-size: 14px; font-weight: 600; }
-    .setting-desc { font-size: 12px; color: var(--text-dim); margin-top: 2px; line-height: 1.4; }
     .bag-card {
       background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
       padding: 12px; box-shadow: var(--shadow);
@@ -488,7 +448,7 @@
       <header class="bar">
         <select id="bag-selector" aria-label="Active bag"></select>
         <button class="icon-btn" id="open-bags" title="Manage bags">⚙</button>
-        <button class="reset-btn" id="reset-all" title="Reset wind / direction / ball power / elevation / chip sliders to defaults">↺ Reset</button>
+        <button class="reset-btn" id="reset-all" title="Reset wind / ball power / elevation / chip sliders to defaults">↺ Reset</button>
       </header>
 
       <div class="play-grid">
@@ -499,7 +459,6 @@
               <span class="mph-unit">MPH</span>
               <button id="clear-mph" class="clear-btn" title="Clear MPH" aria-label="Clear MPH">✕</button>
             </div>
-            <div class="dir-mult" id="dir-summary">pull direction: <span id="dir-name">side wind</span></div>
             <div class="numpad" id="numpad">
               <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
               <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
@@ -508,12 +467,7 @@
             </div>
           </div>
 
-          <div class="cb-pair">
-            <div class="card compass-wrap" data-area="compass">
-              <svg class="compass" id="compass" viewBox="-100 -100 200 200"></svg>
-              <div class="compass-dir small dim" id="compass-dir">side wind</div>
-            </div>
-
+          <div class="be-pair">
             <div class="card bp-card" data-area="ballpower">
               <div class="bp-header">
                 <h3>Ball power</h3>
@@ -528,31 +482,15 @@
                 <button class="chip" data-bp="5"><span class="num">10</span><span class="sub">+13%</span></button>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div class="card elevation-card" data-area="elev">
-          <div class="elev-row">
-            <h3>Elevation</h3>
-            <span class="elev-value mono" id="elev-value">0%</span>
-            <span class="elev-label dim" id="elev-label">flat</span>
-            <span class="tiny dim elev-mult">rings × <span id="elev-mult" class="mono">1.00</span></span>
-          </div>
-          <div class="elev-slider-wrap">
-            <span class="elev-end" id="elev-end-left">−40</span>
-            <input type="range" id="elev-slider" min="-40" max="40" step="5" value="0" list="elev-ticks">
-            <datalist id="elev-ticks">
-              <option value="-40"></option><option value="-30"></option>
-              <option value="-20"></option><option value="-10"></option>
-              <option value="0"></option>
-              <option value="10"></option><option value="20"></option>
-              <option value="30"></option><option value="40"></option>
-            </datalist>
-            <span class="elev-end" id="elev-end-right">+40</span>
-          </div>
-          <div class="elev-legend tiny dim">
-            <span>↘ downhill — ball travels further, more rings</span>
-            <span>↗ uphill — ball travels less, fewer rings</span>
+            <div class="card elevation-card" data-area="elev">
+              <h3>Elevation</h3>
+              <div class="elev-vert">
+                <span class="elev-end tiny dim">↑ uphill<br>fewer</span>
+                <input type="range" class="elev-vertical" id="elev-slider" min="-40" max="40" step="5" value="0">
+                <span class="elev-end tiny dim">↓ downhill<br>more</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -594,16 +532,6 @@
         <div class="title grow">Bags</div>
         <button class="icon-btn" id="new-bag" title="New bag">+</button>
       </header>
-      <div class="card settings-card">
-        <h3>Settings</h3>
-        <label class="setting-row">
-          <input type="checkbox" id="setting-asymmetric">
-          <div class="setting-meta">
-            <div class="setting-name">Asymmetric head/tail factor</div>
-            <div class="setting-desc">Off (default): rings are the same magnitude in every wind direction. On: applies headwind × 1.10, tailwind × 0.85, side × 1.00 — accounts for the fact that head/tail wind changes flight time vs side wind.</div>
-          </div>
-        </label>
-      </div>
       <div id="bag-list" class="bag-list"></div>
     </section>
 
@@ -720,25 +648,12 @@
       const stored = LS.get("gc.lastInputs", null) || {};
       return {
         mph: stored.mph ?? "0",
-        dir: stored.dir ?? 90,
         pinYd: stored.pinYd ?? "",
         elev: stored.elev ?? 0,
         sliders: stored.sliders ?? { Wedges:100, RoughIrons:100, SandWedges:100 },
       };
     }
     function saveInputs() { LS.set("gc.lastInputs", state.inputs); }
-
-    // App-wide settings (independent of bags). Default off.
-    const SETTINGS_DEFAULTS = { asymmetric: false };
-    function getSettings() {
-      return Object.assign({}, SETTINGS_DEFAULTS, LS.get("gc.settings", {}));
-    }
-    function getSetting(key) { return getSettings()[key]; }
-    function setSetting(key, value) {
-      const s = getSettings();
-      s[key] = value;
-      LS.set("gc.settings", s);
-    }
 
     // ============================== Formula ================================
     function ringsPerMph(category, power, accuracy, actualCarry, clubName, level, ballPower) {
@@ -748,21 +663,13 @@
       return (actualCarry * BALL_COEF[ballPower]) /
              (CATEGORY_MAX[category] * base * catMult * corr);
     }
-    // Rings represent total ball displacement from the aim point.
-    // DEFAULT: magnitude is direction-independent (factor = 1), and the
-    // compass + dir label only tell the user which way to pull.
+    // Rings = total ball displacement from the aim point. The magnitude is
+    // DIRECTION-INDEPENDENT: a given wind = the same ring count whether it's
+    // head, tail, or side — only which WAY you pull changes, and you read
+    // that off the in-game wind arrow. This matches every validated tool
+    // (GCN / AllClash / Golf Clash Tommy) and the canonical wind.scala.
     //
-    // OPTIONAL ("asymmetric head/tail factor" in Settings): account for
-    // the fact that head/tail wind changes flight time differently than
-    // side wind. Tailwind shortens flight (less wind effect → smaller
-    // factor); headwind lengthens flight (more wind effect → bigger
-    // factor). Interpolated by s²+c² = 1:
-    //     pure side   -> 1.00
-    //     pure tail   -> 0.85
-    //     pure head   -> 1.10
-    //     45° tail-side -> ~0.93
-    //     45° head-side -> ~1.05
-    // Elevation factor. elev is a percent in [-40, +40] in steps of 10.
+    // Elevation factor. elev is a percent in [-40, +40] in steps of 5.
     //   -20% (downhill 20%): ball travels further → more rings → factor 1.20
     //   +20% (uphill 20%):  ball travels less    → fewer rings → factor 0.80
     // Linear: factor = 1 - elev/100. Verified against the community rule
@@ -771,34 +678,6 @@
     function elevationFactor() {
       const e = parseNum(state.inputs.elev);
       return 1 - e / 100;
-    }
-
-    function directionFactor(deg) {
-      if (!getSetting('asymmetric')) return 1;
-      const rad = deg * Math.PI / 180;
-      const c = Math.cos(rad);
-      const s = Math.sin(rad);
-      const headTail = c > 0 ? 0.85 : 1.10; // c>0 = tailwind side
-      return s*s * 1.0 + c*c * headTail;
-    }
-    function compassName(deg) {
-      // 8-point compass for the named cardinals/intercardinals + degrees
-      // for everything in between. With 24 arrows at 15° steps, the
-      // named slots cover 0/45/90/135/180/225/270/315; the rest get
-      // shown numerically.
-      const named = {0:"N", 45:"NE", 90:"E", 135:"SE", 180:"S", 225:"SW", 270:"W", 315:"NW"};
-      const d = ((Math.round(deg) % 360) + 360) % 360;
-      return named[d] || (d + "°");
-    }
-    // dir = the direction the wind is BLOWING toward (i.e., where the
-    // in-game wind arrow points). So tapping N means "wind goes north",
-    // i.e. the player faces north with wind at their back = TAILWIND.
-    function dirCategory(deg) {
-      const a = Math.abs(((deg + 180) % 360) - 180);
-      const lateral = Math.abs(Math.sin(deg * Math.PI / 180));
-      if (lateral < 0.2) return a < 90 ? "tailwind" : "headwind";
-      if (lateral > 0.8) return "side wind";
-      return "quartering";
     }
 
     // ============================== State =================================
@@ -872,61 +751,13 @@
 
       // mph display
       $("#mph-value").textContent = state.inputs.mph || "0";
-      refreshDirReadouts();
       $("#pin-yd").value = state.inputs.pinYd || "";
-      // elevation display
+      // elevation slider position
       const elevSlider = $("#elev-slider");
       if (elevSlider) elevSlider.value = state.inputs.elev ?? 0;
-      refreshElevReadouts();
 
-      renderCompass();
       renderTable1();
       renderChipRows();
-    }
-
-    function renderCompass() {
-      const svg = $("#compass");
-      const inputs = state.inputs;
-      // Slightly smaller face circle so the cardinal labels sit clear
-      // of the arrow bases.
-      let html = `<circle class="face" cx="0" cy="0" r="86"/>`;
-      // cardinal labels (N/E/S/W) outside the arrows so they're not
-      // blocked by the wedges. The arrows extend to r=78; labels at 92.
-      const cards = [["N",0,-92],["E",92,0],["S",0,92],["W",-92,0]];
-      for (const [t,x,y] of cards) html += `<text class="cardinal-label" x="${x}" y="${y}">${t}</text>`;
-      // 24 arrows at 15° steps. Slightly chunkier than before so each
-      // wedge is easier to spot and the tap target reads visually.
-      // The 4 cardinals get .cardinal (red).
-      for (let i = 0; i < 24; i++) {
-        const deg = i * 15;
-        const rad = deg * Math.PI / 180;
-        // Wedge geometry: thicker base, slightly longer than the old
-        // arrows. Tip nearer the center; base wider for visibility.
-        const tipR = 44;
-        const baseR = 78;
-        const w = 8;          // half-thickness at base
-        const tipW = 3;       // half-thickness at tip (slight taper)
-        const sin = Math.sin(rad), cos = Math.cos(rad);
-        const tx = sin * tipR, ty = -cos * tipR;
-        const perpX = cos, perpY = sin;
-        const t1x = tx + perpX * tipW,  t1y = ty + perpY * tipW;
-        const t2x = tx - perpX * tipW,  t2y = ty - perpY * tipW;
-        const b1x = sin * baseR + perpX * w, b1y = -cos * baseR + perpY * w;
-        const b2x = sin * baseR - perpX * w, b2y = -cos * baseR - perpY * w;
-        const isOn = Math.abs(((inputs.dir - deg + 540) % 360) - 180) < 7.5;
-        const isCardinal = (deg % 90) === 0;
-        html += `<g class="arrow-btn ${isOn ? "on" : ""} ${isCardinal ? "cardinal" : ""}" data-deg="${deg}">`;
-        // Bigger tap target so the dial is forgiving on touch.
-        const hx = sin * 78, hy = -cos * 78;
-        html += `<circle cx="${hx}" cy="${hy}" r="18" fill="transparent"/>`;
-        // Trapezoid: wide at base, slight taper to a near-point at the tip.
-        html += `<polygon points="${t1x},${t1y} ${b1x},${b1y} ${b2x},${b2y} ${t2x},${t2y}"/>`;
-        html += `</g>`;
-      }
-      // center recenter button — tap to reset to side wind (90°)
-      html += `<circle class="center-btn" cx="0" cy="0" r="22"/>`;
-      html += `<text class="center-label" x="0" y="0">${state.inputs.dir.toFixed(0)}°</text>`;
-      svg.innerHTML = html;
     }
 
     // Build the "→ at this exact distance, use Club X at Y% slider = Z rings"
@@ -935,10 +766,8 @@
     function pinRecommendation(pin, bag) {
       if (!pin) return { html: "", matchedCat: null, exactRings: null };
       const mph = parseNum(state.inputs.mph);
-      const dirF = directionFactor(state.inputs.dir);
       const elevF = elevationFactor();
-      // Only show factors in the breakdown when they aren't 1.
-      const dirBreakdown = Math.abs(dirF - 1) > 0.001 ? ` × ${dirF.toFixed(2)} dir` : "";
+      // Only show the elevation factor in the breakdown when it isn't 1.
       const elevBreakdown = Math.abs(elevF - 1) > 0.001 ? ` × ${elevF.toFixed(2)} elev` : "";
 
       // Normal clubs: iterate shortest-first, so an exact boundary distance
@@ -956,13 +785,13 @@
         if (lowerOk && pin <= maxC) {
           const sliderPct = (pin / maxC) * 100;
           const rPerMph = ringsPerMph(cat, s.power, s.accuracy, pin, s.name, s.level, bag.ballPower);
-          const rings = rPerMph * mph * dirF * elevF;
+          const rings = rPerMph * mph * elevF;
           const html = `
             <div class="rec-line">
               <span class="rec-arrow">→</span>
               <div class="rec-body">
                 <div class="rec-club"><strong>${DISPLAY[cat]} — ${escapeHtml(s.name)} ${s.level}</strong> · ${sliderPct.toFixed(0)}% slider</div>
-                <div class="rec-rings"><span class="rec-num mono">${fmt(rings)}</span> <span class="rec-unit">rings to pull</span> <span class="tiny dim">(${mph || 0} MPH × ${rPerMph.toFixed(2)} rings/mph${dirBreakdown}${elevBreakdown})</span></div>
+                <div class="rec-rings"><span class="rec-num mono">${fmt(rings)}</span> <span class="rec-unit">rings to pull</span> <span class="tiny dim">(${mph || 0} MPH × ${rPerMph.toFixed(2)} rings/mph${elevBreakdown})</span></div>
               </div>
             </div>`;
           return { html, matchedCat: cat, exactRings: rings };
@@ -974,7 +803,7 @@
         const s = bag.slots.Wedges;
         const sliderPct = (pin / wedgePower) * 100;
         const rPerMph = ringsPerMph('Wedges', s.power, s.accuracy, pin, s.name, s.level, bag.ballPower);
-        const rings = rPerMph * mph * dirF * elevF;
+        const rings = rPerMph * mph * elevF;
         const html = `
           <div class="rec-line">
             <span class="rec-arrow">→</span>
@@ -994,7 +823,6 @@
     function renderTable1() {
       const bag = activeBag();
       const mph = parseNum(state.inputs.mph);
-      const dirF = directionFactor(state.inputs.dir);
       const elevF = elevationFactor();
       const pin = parseNum(state.inputs.pinYd);
       const rec = pinRecommendation(pin, bag);
@@ -1005,9 +833,9 @@
         const sh = bag.slots[SHORTER[cat]];
         const minC = sh.power, maxC = s.power, midC = (minC + maxC) / 2;
         const args = (carry) => [cat, s.power, s.accuracy, carry, s.name, s.level, bag.ballPower];
-        const rMin = ringsPerMph(...args(minC)) * mph * dirF * elevF;
-        const rMid = ringsPerMph(...args(midC)) * mph * dirF * elevF;
-        const rMax = ringsPerMph(...args(maxC)) * mph * dirF * elevF;
+        const rMin = ringsPerMph(...args(minC)) * mph * elevF;
+        const rMid = ringsPerMph(...args(midC)) * mph * elevF;
+        const rMax = ringsPerMph(...args(maxC)) * mph * elevF;
         const inRange = rec.matchedCat === cat;
         rows += `
           <tr class="${inRange ? "in-range" : ""}">
@@ -1058,7 +886,6 @@
     function updateChipLiveValues() {
       const bag = activeBag();
       const mph = parseNum(state.inputs.mph);
-      const dirF = directionFactor(state.inputs.dir);
       const elevF = elevationFactor();
       for (const cat of SLIDER) {
         const row = document.querySelector(`#chip-rows .chip-row[data-cat="${cat}"]`);
@@ -1067,7 +894,7 @@
         const sliderPct = state.inputs.sliders[cat] ?? 100;
         const carry = s.power * sliderPct / 100;
         const rPerMph = ringsPerMph(cat, s.power, s.accuracy, carry, s.name, s.level, bag.ballPower);
-        const live = rPerMph * mph * dirF * elevF;
+        const live = rPerMph * mph * elevF;
         row.querySelector('.pct').textContent = sliderPct.toFixed(0) + '%';
         row.querySelector('.live').textContent = fmt(live);
       }
@@ -1100,12 +927,6 @@
             </div>
           </div>`;
       }).join("");
-      // Settings checkbox
-      const settingEl = $("#setting-asymmetric");
-      if (settingEl) {
-        settingEl.checked = getSetting('asymmetric');
-        settingEl.onchange = (e) => setSetting('asymmetric', e.target.checked);
-      }
     }
 
     function renderEdit() {
@@ -1341,36 +1162,9 @@
       updateChipLiveValues();
     }
 
-    function onCompassTap(deg) {
-      state.inputs.dir = deg;
-      saveInputs();
-      renderCompass();
-      refreshDirReadouts();
-      renderTable1();
-      updateChipLiveValues();
-    }
-
-    // Update elevation readouts (value, label, multiplier) — independent
-    // of any specific event, called whenever elev state may have changed.
-    function refreshElevReadouts() {
-      const elev = parseNum(state.inputs.elev);
-      const factor = elevationFactor();
-      const valEl = $("#elev-value");
-      const labelEl = $("#elev-label");
-      const multEl = $("#elev-mult");
-      if (!valEl) return; // play view not rendered yet
-      valEl.textContent = (elev > 0 ? "+" : "") + elev.toFixed(0) + "%";
-      let label = "flat";
-      if (elev < 0) label = "downhill — more rings";
-      else if (elev > 0) label = "uphill — fewer rings";
-      labelEl.textContent = label;
-      multEl.textContent = factor.toFixed(2);
-    }
-
     function onElevation(v) {
       state.inputs.elev = Math.max(-40, Math.min(40, +v || 0));
       saveInputs();
-      refreshElevReadouts();
       renderTable1();
       updateChipLiveValues();
     }
@@ -1380,7 +1174,6 @@
     function resetAll() {
       state.inputs = {
         mph: "0",
-        dir: 90,          // East = pure side wind
         pinYd: "",
         elev: 0,
         sliders: { Wedges: 100, RoughIrons: 100, SandWedges: 100 },
@@ -1392,23 +1185,6 @@
         saveBags(state.bags);
       }
       renderPlay();
-    }
-
-    // Update direction-derived UI: pull-direction guidance in the wind
-    // card (#dir-name) and the compass-dir name + category below the
-    // dial. Magnitude is direction-independent because rings are a
-    // universal displacement compensator (pull forward/back/sideways).
-    function refreshDirReadouts() {
-      const deg = state.inputs.dir;
-      const cat = dirCategory(deg);
-      const dirName = $("#dir-name");
-      if (dirName) {
-        if (cat === "headwind")       dirName.textContent = "headwind — pull rings FORWARD (past target)";
-        else if (cat === "tailwind")  dirName.textContent = "tailwind — pull rings BACK (short of target)";
-        else if (cat === "side wind") dirName.textContent = "side wind — pull rings SIDEWAYS (into wind)";
-        else                          dirName.textContent = cat + " — pull at the wind angle";
-      }
-      $("#compass-dir").textContent = compassName(deg) + " · " + cat;
     }
 
     function onBallPower(bp) {
@@ -1438,12 +1214,6 @@
       $("#mph-value").addEventListener("click", () => setMph("0"));
       const mphUnit = document.querySelector('.mph-unit');
       if (mphUnit) mphUnit.addEventListener("click", () => setMph("0"));
-      // Compass
-      $("#compass").addEventListener("click", (e) => {
-        const g = e.target.closest("[data-deg]");
-        if (g) onCompassTap(+g.dataset.deg);
-        else if (e.target.closest(".center-btn")) onCompassTap(90); // reset to side wind
-      });
       // Ball power
       $("#ball-power").addEventListener("click", (e) => {
         const c = e.target.closest(".chip"); if (!c) return;
