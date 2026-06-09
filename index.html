@@ -287,7 +287,11 @@
        -40..+40 in 5% steps. Top = +40 uphill (fewer rings); bottom = -40
        downhill (more rings). No live readout text → zero layout shift. */
     .elevation-card { padding: 10px 8px; display: flex; flex-direction: column; }
-    .elevation-card h3 { margin: 0 0 8px; }
+    .elevation-card h3 { margin: 0 0 2px; }
+    /* Single fixed-position % readout — centered + tabular so digit changes
+       never shift the layout. It's the only text in the card. */
+    .elevation-card .elev-value { text-align: center; font-weight: 700; font-size: 18px;
+      color: var(--accent); font-variant-numeric: tabular-nums; margin: 0 0 6px; }
     .elev-vert { flex: 1; display: flex; flex-direction: column; align-items: center;
       gap: 6px; min-height: 180px; }
     .elev-end { text-align: center; line-height: 1.15; }
@@ -485,10 +489,11 @@
 
             <div class="card elevation-card" data-area="elev">
               <h3>Elevation</h3>
+              <div class="elev-value mono" id="elev-value">0%</div>
               <div class="elev-vert">
-                <span class="elev-end tiny dim">↑ uphill<br>fewer</span>
+                <span class="elev-end tiny dim">↑</span>
                 <input type="range" class="elev-vertical" id="elev-slider" min="-40" max="40" step="5" value="0">
-                <span class="elev-end tiny dim">↓ downhill<br>more</span>
+                <span class="elev-end tiny dim">↓</span>
               </div>
             </div>
           </div>
@@ -752,9 +757,10 @@
       // mph display
       $("#mph-value").textContent = state.inputs.mph || "0";
       $("#pin-yd").value = state.inputs.pinYd || "";
-      // elevation slider position
+      // elevation slider position + % readout
       const elevSlider = $("#elev-slider");
       if (elevSlider) elevSlider.value = state.inputs.elev ?? 0;
+      refreshElevValue();
 
       renderTable1();
       renderChipRows();
@@ -1162,9 +1168,17 @@
       updateChipLiveValues();
     }
 
+    function refreshElevValue() {
+      const el = $("#elev-value");
+      if (!el) return;
+      const e = parseNum(state.inputs.elev);
+      el.textContent = (e > 0 ? "+" : "") + e.toFixed(0) + "%";
+    }
+
     function onElevation(v) {
       state.inputs.elev = Math.max(-40, Math.min(40, +v || 0));
       saveInputs();
+      refreshElevValue();
       renderTable1();
       updateChipLiveValues();
     }
